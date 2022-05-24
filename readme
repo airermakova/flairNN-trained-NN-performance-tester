@@ -1,5 +1,15 @@
-This is python script to estimate performance of flair NN, trained to recognize user identity
+This repository contains python script to estimate performance of flair NN, trained to recognize user identity.
+And python script to prepare training sets for ner recognition.
 
+To estimate flairNN performance:
+To use do following steps: 
+
+1. Prepare text in .txt format
+2. Save is in utf-8 format 
+3. Copy file UsersList.txt into same folder with python script#
+4. Start python script from console with command python FlaiNNTest.py <yourTextFile>
+
+To prepare flairNN training sets:
 To use do following steps: 
 
 1. Prepare text in .txt format
