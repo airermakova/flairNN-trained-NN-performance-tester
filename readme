@@ -1,0 +1,8 @@
+This is python script to estimate performance of flair NN, trained to recognize user identity
+
+To use do following steps: 
+
+1. Prepare text in .txt format
+2. Save is in utf-8 format 
+3. Copy file UsersList.txt into same folder with python script#
+4. Start python script from console with command python testNNPerformance.py <yourTextFile>
