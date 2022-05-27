@@ -34,6 +34,10 @@ globalUsers = []
 globalCount = []
 stemmer = SnowballStemmer("english")
 
+tr = open("train1.txt", "a")
+v = open("val1.txt", "a")
+te = open("test1.txt", "a")
+
 #TO GET PHRASES
 def getPhrasesFromFile(fileName):
     phrases= []    
@@ -107,8 +111,8 @@ def checkMarkedArrayPresence(phrases, users):
             if ind>0:
                iob_tagged = markUser(iob_tagged, us)
         for iob in iob_tagged:
-            if iob[2]=="B":
-                onlyUsers.append(iob_tagged)          
+             if iob[2]=="B":
+                onlyUsers.append(markUser(iob_tagged, us))      
     return onlyUsers
          
 
@@ -177,15 +181,12 @@ def markUser(phrase,user):
     return finTuple
  
 def writeResultFile(trainSet):
-    t = open("train1.txt", "a")
-    v = open("val1.txt", "a")
-    te = open("test1.txt", "a")
     for arr in trainSet:
         for s in arr:
             for st in s:
-                t.write((st + " ").encode("utf-8").decode("utf-8"))
-            t.write("\n")            
-        t.write("\n\n\n") 
+                tr.write((st + " ").encode("utf-8").decode("utf-8"))
+            tr.write("\n")            
+        tr.write("\n\n\n") 
     t = 0
     for arr in trainSet:
         t = t+1
@@ -211,19 +212,19 @@ def writeResultFile(trainSet):
 def writeUsersFile():    
     if len(globalUsers) != len(globalCount):
         return
-    usersFile .write("\n\n\n\n")
+    usersFile.write("\n\n\n\n")
     for i in range(0, len(globalCount)):
-        usersFile .write(globalUsers[i] + "---") 
-        usersFile .write(globalCount[i])
-        usersFile .write("\n") 
+        for gl in range(0, len(globalUsers[i])):
+            usersFile.write(str(globalUsers[i][gl])) 
+            usersFile.write(str(globalCount[i]))
+        usersFile.write("\n") 
 
 
 #TO PREPARE USERS RECOGNITION FOR MULTITHREADING
-def writeUsers(trainSet, users):
-    fin = checkMarkedArrayPresence(trainSet, users)
-    print("WRITE USER FILE")
+def writeUsers(pharrays, users):
+    fin = checkMarkedArrayPresence(pharrays, users)
     writeUsersFile()
-    print("WRITE RESULT FILE")
+    print("WRITE RESULT FILE" + str(len(fin)))
     writeResultFile(fin)
 
 #MAIN SCRIPTS
@@ -239,18 +240,24 @@ f.close()
 
 rep = 0
 i=0
-phrases = []
+
 usersFile = open("onlyDetectedUsers.txt", "a")
+writeUsers(trainSet, users)
+#threads = []
 
-for ph in trainSet:
-    i=i+1
-    phrases.append(ph)
-    if i>=100:
-        thread = Thread(target=writeUsers, args=(list(phrases), users))
-        thread.start()
-        i=0
-        phrases = []
-
+#for ph in trainSet:
+#    phrases = []
+#    i=i+1
+#    phrases.append(ph)
+#    if i>=10 and len(phrases)<=10:
+#        threads.append(Thread(target=writeUsers, args=(list(phrases), users)))
+#        i=0
+#        phrases.clear()
+##
+#
+#for ph in threads:
+#    print("thread start")
+#    ph.start()
 
 
 
