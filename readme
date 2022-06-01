@@ -16,3 +16,14 @@ To use do following steps:
 2. Save is in utf-8 format 
 3. Copy file UsersList.txt into same folder with python script#
 4. Start python script from console with command python prepareTestSets.py or prepareTestSetsComplexUsers.py <yourTextFile>
+
+There is also script to use trained NN to mark users.
+It will execute following steps:
+ - mark users from phrases from entrance file
+ - create 3 files, 
+ file with marked phrases "markedPhrases.txt", 
+ file with phrases where users identities defined with 1 word only "markedSimpleUsersOnly.txt", 
+ file with phrases where users identities marked with several words "markedComplexUsersOnly.txt".
+To see all users marked by trained NN do following steps: 
+in file "demoForNN.py" in line "phrases = getPhrasesFromFile("testData.txt", 0, 1000)" set name of file to <yourtextfile> 
+and 1000 to a number of phrases to analyse
