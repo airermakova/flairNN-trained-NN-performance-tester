@@ -4,7 +4,7 @@ from flair.embeddings import WordEmbeddings, StackedEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 from flair.data import Sentence
-#import sys
+import sys
 import re
 import nltk
 import numpy
@@ -67,6 +67,16 @@ def getDataFromFile(fileName):
       if len(users)>0:
           print(users[len(users)-1])
       exit()
+
+
+dataFileName = str(sys.argv[1])
+print(dataFileName)
+phNum = int(sys.argv[2])
+print(phNum)
+
+phrases = getPhrasesFromFile(dataFileName, 0, phNum)
+print("Taken phrases - ")
+print(len(phrases))
 
 #TO MARK USERS IN PHRASES 
 
@@ -214,14 +224,7 @@ def writeUsersStatFile():
 
 
 #MAIN SCRIPT
-#dataFileName = str(sys.argv[1])
-#print(dataFileName)
-#phNum = str(sys.argv[2])
-#print(phNum)
 
-phrases = getPhrasesFromFile("testData.txt", 0, 1000)
-print("Taken phrases - ")
-print(len(phrases))
 users=markUsers(phrases)
 #print(users)
 writeUsersFile(users)
