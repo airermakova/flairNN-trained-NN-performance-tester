@@ -24,7 +24,7 @@ It will execute following steps:
  file with marked phrases "markedPhrases.txt", 
  file with phrases where users identities defined with 1 word only "markedSimpleUsersOnly.txt", 
  file with phrases where users identities marked with several words "markedComplexUsersOnly.txt".
+ 
 To see all users marked by trained NN do following steps: 
-In demoForNN.py in string phrases = getPhrasesFromFile("testData.txt", 0, 1000)
-set your file name and phrases number 
-Start python script from console with command python demoForNN.py 
+python demoForNN.py <your text file> <number of ohrases to read>
+
