@@ -15,7 +15,10 @@ To use do following steps:
 1. Prepare text in .txt format
 2. Save is in utf-8 format 
 3. Copy file UsersList.txt into same folder with python script#
-4. Start python script from console with command python prepareTestSets.py or prepareTestSetsComplexUsers.py <yourTextFile>
+4. Start python script from console with command python prepareTestSets.py or prepareTestSetsComplexUsers.py or prepareTestSetsComplexUsers1.py <yourTextFile>
+
+prepareTestSetsComplexUsers1.py script at the end of training set preparation will create statistics file with all users found in source file. It will be written in 
+"onlyDetectedUsers.txt" file
 
 There is also script to use trained NN to mark users.
 It will execute following steps:
