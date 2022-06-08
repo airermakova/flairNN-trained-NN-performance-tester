@@ -11,6 +11,7 @@ import numpy
 import random
 import codecs
 from langdetect import detect
+from threading import Thread
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('maxent_ne_chunker')
@@ -33,7 +34,12 @@ simpleUsers = []
 complexUsers = []
 usersCounts = []
 comUsersCounts = []
-model = SequenceTagger.load("C:/Users/airer/Documents/Pisa/Classifier/trainer/final-model.pt")
+simpleF = open("markedSimpleUsersOnly1.txt", "a")
+markedPhrasesFile = open("markedPhrases1.txt", "a")
+complexPhrasesFile = open("markedComplexUsersOnly1.txt", "a")
+userStatistics = open("markedUsersStatistics1.txt", "a")
+
+model = SequenceTagger.load("C:/Users/airer/Documents/Pisa/Classifier/trainer1/final-model.pt")
 
 #TO GET PHRASES
 def getPhrasesFromFile(fileName, st, fin):
@@ -83,7 +89,9 @@ print(len(phrases))
 def markUsers(phrases):
     finArr = []
     for phrase in phrases:
-       finArr.append(getUsersFromNN(phrase)) 
+       marked = getUsersFromNN(phrase)
+       print(marked)
+       finArr.append(marked)
     return finArr    
 
    
@@ -96,7 +104,11 @@ def getUsersFromNN(phrase):
     onlusers = sent.split("[")
     #create tuples
     onlyUsers = []
+    if len(onlusers)<2:
+        return onlyUsers
     tupleArr = onlusers[1].split(",")
+    if len(tupleArr)<1:
+        return onlyUsers
     for tp in tupleArr: 
         t = tp.split("/")
         if len(t)>1:
@@ -107,14 +119,12 @@ def getUsersFromNN(phrase):
 
 #TO STORE MARKED PHRASES IN FINAL FILE
 
-def writeUsersFile(finalArray):
-    f = open("markedPhrases.txt", "w")
+def writeUsersFile(finalArray):    
     for arr in finalArray:
-        f.write(' '.join(str(s) for s in arr) + "\n\n")  
+        markedPhrasesFile.write(' '.join(str(s) for s in arr) + "\n\n")  
 
 
 def writeOnlySimpleUsersFile(finalArray):
-    f = open("markedSimpleUsersOnly.txt", "w")
     for i in range(0, len(finalArray)-2):
         found = False
         wr = False
@@ -128,12 +138,11 @@ def writeOnlySimpleUsersFile(finalArray):
                     if s!= "I":
                         wr = True
         if wr == True:
-            f.write(' '.join(str(s) for s in finalArray[i]) + "\n\n")  
+            simpleF.write(' '.join(str(s) for s in finalArray[i]) + "\n\n")  
 
 
 
-def writeOnlyComUsersFile(finalArray):
-    f = open("markedComplexUsersOnly.txt", "w")
+def writeOnlyComUsersFile(finalArray):    
     for i in range(0, len(finalArray)-2):
         found = False
         wr = False
@@ -147,7 +156,7 @@ def writeOnlyComUsersFile(finalArray):
                     if s == "I":
                         wr = True
         if wr == True:
-            f.write(' '.join(str(s) for s in finalArray[i]) + "\n\n") 
+            complexPhrasesFile.write(' '.join(str(s) for s in finalArray[i]) + "\n\n") 
 
 
 def getUsersStatistics(finalArray):
@@ -194,8 +203,7 @@ def getUsersStatistics(finalArray):
                     complexUsers.append(str)
                     
 
-def writeUsersStatFile():
-    f = open("markedUsersStatistics.txt", "w")
+def writeUsersStatFile():    
     allSimUsers = []
     allComUsers = []
     for user in simpleUsers:
@@ -216,21 +224,39 @@ def writeUsersStatFile():
                  comUsersCounts[ind] = comUsersCounts[ind] + 1
     for i in range(0, len(allSimUsers)-1):
         tw = allSimUsers[i] + "-" + str(usersCounts[i]) + "\n"
-        f.write(tw)
+        userStatistics.write(tw)
     for i in range(0, len(allComUsers)-1):
         tw = allComUsers[i] + "-" + str(comUsersCounts[i])+ "\n"
-        f.write(tw)
+        userStatistics.write(tw)
             
 
 
 #MAIN SCRIPT
 
-users=markUsers(phrases)
-#print(users)
-writeUsersFile(users)
-writeOnlySimpleUsersFile(users)
-writeOnlyComUsersFile(users)
-getUsersStatistics(users)
-writeUsersStatFile()
-print(simpleUsers)
-print(complexUsers)
+def writeUsers(phr, us):
+    users=markUsers(phr)
+    writeUsersFile(users)
+    writeOnlySimpleUsersFile(users)
+    writeOnlyComUsersFile(users)
+    getUsersStatistics(users)
+    writeUsersStatFile()
+    print(simpleUsers)
+    print(complexUsers)
+
+threads = []
+i = 0
+phr = []
+for ph in phrases:   
+    i=i+1    
+    phr.append(ph)
+    if i>=10 and len(phr)<=10:
+        arr = []
+        arr = list(phr)
+        threads.append(Thread(target=writeUsers, args=(arr, "1")))
+        i=0
+        phr.clear()
+
+
+for ph in threads:
+    print("thread start")
+    ph.start()
