@@ -31,3 +31,13 @@ It will execute following steps:
 To see all users marked by trained NN do following steps: 
 python demoForNN.py <your text file> <number of ohrases to read>
 
+
+To prepare improve flairNN performance for complex users :
+Do following steps: 
+
+1. Prepare text in .txt format
+2. Save is in utf-8 format 
+3. Copy trained model in file path <your script>/trainer/final-model.pt
+4. Start python script from console with command python FlairNNCorection.py <yourTextFile> <number of ohrases to read>
+
+
