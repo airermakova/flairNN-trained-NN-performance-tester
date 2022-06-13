@@ -39,7 +39,7 @@ markedPhrasesFile = open("markedPhrases1.txt", "a")
 complexPhrasesFile = open("markedComplexUsersOnly1.txt", "a")
 userStatistics = open("markedUsersStatistics1.txt", "a")
 
-model = SequenceTagger.load("C:/Users/airer/Documents/Pisa/Classifier/trainer/final-model.pt")
+model = SequenceTagger.load("./trainer/final-model.pt")
 
 #TO GET PHRASES
 def getPhrasesFromFile(fileName, st, fin):
