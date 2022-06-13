@@ -124,9 +124,9 @@ def getUsersFromNN(phrase):
             if t[1] == "I" and tp[1] == "B": 
                 pos = list(pos_tag(phrase.split(" ")))
                 for st in pos:
-                    if st[0] in str(tp[0]) and "J" not in st[1]:
+                    if st[0] in str(tp[0]) and "JJ" not in st[1] and "RB" not in st[1] and "DT" not in st[1] and "NN" not in st[1]:
                        change = True
-                       print(st[1] + "TP" + tp[0])
+                       print(st[1] + " " + tp[0])
                 
             if change == True:
                 t[1] = "B"
