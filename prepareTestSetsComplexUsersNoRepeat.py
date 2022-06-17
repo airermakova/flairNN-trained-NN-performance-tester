@@ -102,6 +102,7 @@ print(len(goldsets))
 
 def checkMarkedArrayPresence(phrases, users):
     onlyUsers = []
+    registeredUser = []
     for phrase in phrases:
         nltk_tags = pos_tag(word_tokenize(phrase))  
         iob_tagged = tree2conlltags(nltk_tags) 
@@ -111,10 +112,9 @@ def checkMarkedArrayPresence(phrases, users):
             us = user.split(" ")
             if ind>0:
                iob_tagged = markUser(iob_tagged, us)
-        registeredUser = []
         regStr = ""
         newLen = 0
-        allowAppend = False
+        allowAppend = False         
         for iob in iob_tagged:
              if iob[2]=="B" :
                  regStr = iob[0]                 
@@ -122,6 +122,8 @@ def checkMarkedArrayPresence(phrases, users):
                  regStr += " " + iob[0]
              if iob[2]=="O" and len(regStr)>0:
                  registeredUser.append(regStr)
+                 if len(regStr.split(" "))>1:
+                     allowAppend = True
                  regStr = ""
                  newLen = newLen + 1
         if newLen>0:
@@ -179,7 +181,7 @@ def markUser(phrase,user):
            if phrase[i][0] == user[0] and phrase[i][1][0]=="N":  
                cnt = i-1
                found = False
-               while cnt>=0 and phrase[cnt][1]=="JJ" and stemmer.stem(phrase[cnt][0]) in goldsets:
+               while cnt>=0 and phrase[cnt][1]=="JJ":
                    ls = list(phrase[cnt])
                    ls[2]="I"
                    finTuple[cnt] = (tuple(ls))
@@ -275,9 +277,8 @@ i=0
 usersFile = open("onlyDetectedUsersNR.txt", "a")
 #writeUsers(trainSet, users)
 threads = []
-
-for ph in trainSet:
-    phrases = []
+phrases = []
+for ph in trainSet:    
     i=i+1
     phrases.append(ph)
     if i>=10 and len(phrases)<=10:
