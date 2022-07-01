@@ -40,4 +40,8 @@ Do following steps:
 3. Copy trained model in file path <your script>/trainer/final-model.pt
 4. Start python script from console with command python FlairNNCorection.py <yourTextFile> <number of ohrases to read>
 
-
+To estimate how many users was added into train set do following steps:
+1. Make sure after preparation of training set you got file onlyDetectedUsersNR.txt. If file with user statistic have different name, rename it into onlyDetectedUsersNR.txt
+2. Start python script from console with command python foundUsersStat.py
+All complex users will be written into file onlyDetectedComplexUsersNRStat.txt. 
+All simple users will be written into file onlyDetectedSimpleUsersNRStat
