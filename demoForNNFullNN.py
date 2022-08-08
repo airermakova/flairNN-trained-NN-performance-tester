@@ -11,7 +11,8 @@ import numpy
 import random
 import codecs
 from langdetect import detect
-from threading import Thread
+from threading import *
+import time
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('maxent_ne_chunker')
@@ -30,17 +31,27 @@ from nltk.corpus import conll2000, conll2002
 phrases = []
 fphrases = []
 users = []
-simpleUsers = []
-complexUsers = []
+allSimUsers = []
+allComUsers = []
 usersCounts = []
 comUsersCounts = []
-simpleF = open("markedSimpleUsersOnlyFullNN.txt", "a")
-markedPhrasesFile = open("markedPhrasesFullNN.txt", "a")
-complexPhrasesFile = open("markedComplexUsersOnlyFullNN.txt", "a")
-userStatistics = open("markedUsersStatisticsFullNN.txt", "a")
-usersNotInListFile = open("markedUsersOutOfList.txt", "a")
+threadsL = []
+sema = Semaphore(1)
+simpleF = open("markedSimpleUsersOnlyFullNN.txt", "w")
+markedPhrasesFile = open("markedPhrasesFullNN.txt", "w")
+complexPhrasesFile = open("markedComplexUsersOnlyFullNN.txt", "w")
+userStatistics = open("markedUsersStatisticsFullNN.txt", "w")
+usersNotInListFile = open("markedUsersOutOfList.txt", "w")
 
-model = SequenceTagger.load("C:/Users/airer/Documents/Pisa/Classifier/trainer/final-model.pt")
+#simpleF.close()
+markedPhrasesFile.close()
+#complexPhrasesFile.close()
+#userStatistics.close()
+#usersNotInListFile.close()
+
+markedPhrasesFileName = "markedPhrasesFullNN.txt"
+
+model = SequenceTagger.load("C:/Users/airer/Documents/Pisa/Classifier/trainerNRFinal/final-model.pt")
 
 #TO GET PHRASES
 def getPhrasesFromFile(fileName, st, fin):
@@ -68,6 +79,7 @@ def getDataFromFile(fileName):
        print("file object created")
        for l in word_file:
            users.append(l.replace('\r', '').replace('\n', ''))
+       word_file.close()
        return users
     except:
       print("Error in reading " + fileName)
@@ -95,7 +107,7 @@ def markUsers(phrases):
     finArr = []
     for phrase in phrases:
        marked = getUsersFromNN(phrase)
-       print(marked)
+       #print(marked)
        finArr.append(marked)
     return finArr    
 
@@ -124,9 +136,12 @@ def getUsersFromNN(phrase):
 
 #TO STORE MARKED PHRASES IN FINAL FILE
 
-def writeUsersFile(finalArray):    
+def writeUsersFile(finalArray):
+    finStr = ""
     for arr in finalArray:
-        markedPhrasesFile.write(' '.join(str(s) for s in arr) + "\n\n")  
+           finStr = finStr + (' '.join(str(s) for s in arr) + "\n\n") 
+    with open(markedPhrasesFileName, 'a') as f:    
+        f.write(finStr.encode("utf-8").decode())  
 
 
 def writeOnlySimpleUsersFile(finalArray):
@@ -164,26 +179,8 @@ def writeOnlyComUsersFile(finalArray):
             complexPhrasesFile.write(' '.join(str(s) for s in finalArray[i]) + "\n\n") 
 
 
-def getUsersStatistics(finalArray):
-    for i in range(0, len(finalArray)-2):
-        found = False
-        wr = False
-        arr = list(finalArray[i])
-        for y in range(0, len(arr)-2):
-            for s in arr[y]:
-                 suser = s
-                 if s == "B":
-                     found = True
-            if found == True:
-                for s in arr[y+1]:
-                    if s!= "I":
-                        wr = True
-        if wr == True:
-            for y in range(0, len(arr)-2):
-                us = list(arr[y])
-                if us[1] == "B":
-                    simpleUsers.append(us[0]) 
-    for i in range(0, len(finalArray)-2):
+def getUsersStatistics(finalArray):           
+     for i in range(0, len(finalArray)-2):
         found = False
         wr = False
         arr = list(finalArray[i])
@@ -205,72 +202,84 @@ def getUsersStatistics(finalArray):
                 if us[1] == "I":
                     str = str + " " + us[0]
                 if us[1]!="B" and us[1]!="I" and len(str)>0:
-                    complexUsers.append(str)
+                    if str not in allComUsers: 
+                        allComUsers.append(str)
+                        comUsersCounts.append(1)
+                    else: 
+                        ind = allComUsers.index(str)
+                        if ind>=0:
+                            comUsersCounts[ind] = comUsersCounts[ind] + 1                   
+        elif wr == False and found == True:
+            for y in range(0, len(arr)-2):
+                us = list(arr[y])
+                if us[1] == "B":
+                    if us[0] not in allSimUsers: 
+                        allSimUsers.append(us[0])
+                        usersCounts.append(1)
+                    else: 
+                        ind = allSimUsers.index(us[0])
+                        if ind>=0:
+                            usersCounts[ind] = usersCounts[ind] + 1
                     
 
-def writeUsersStatFile():    
-    allSimUsers = []
-    allComUsers = []
-    for user in simpleUsers:
-         if user not in allSimUsers: 
-             allSimUsers.append(user)
-             usersCounts.append(1)
-         else: 
-             ind = allSimUsers.index(user)
-             if ind>=0:
-                 usersCounts[ind] = usersCounts[ind] + 1
-    for user in complexUsers:          
-         if user not in allComUsers: 
-             allComUsers.append(user)
-             comUsersCounts.append(1)
-         else: 
-             ind = allComUsers.index(user)
-             if ind>=0:
-                 comUsersCounts[ind] = comUsersCounts[ind] + 1
-    userStatistics.write("\n\n\n\n\n\n")
-    usersNotInListFile.write("\n\n\n\n\n\n")
+def writeUsersStatFile():   
+    userStatistics.write("\n\n\n\n")
+    usersNotInListFile.write("\n\n\n\n")
+    simpleF.write("\n\n\n\n")
+    complexPhrasesFile.write("\n\n\n\n")
     for i in range(0, len(allSimUsers)-1):
         tw = allSimUsers[i] + "-" + str(usersCounts[i]) + "\n"
+        simpleF.write(tw)
         userStatistics.write(tw)
     for i in range(0, len(allComUsers)-1):
         tw = allComUsers[i] + "-" + str(comUsersCounts[i])+ "\n"
         userStatistics.write(tw)
+        complexPhrasesFile.write(tw)
         if len(allComUsers[i])>1 and allComUsers[i] not in usersList:
             usersNotInListFile.write(tw)
             
+def printData():
+    print(allSimUsers)
+    print(allComUsers)
 
 
 #MAIN SCRIPT
 
-def writeUsers(phr, us):
-    users=markUsers(phr)
-    writeUsersFile(users)
-    writeOnlySimpleUsersFile(users)
-    writeOnlyComUsersFile(users)
-    getUsersStatistics(users)
-    writeUsersStatFile()
-    print(simpleUsers)
-    print(complexUsers)
-    print("THREAD FINISHED " + str(us))
-
+def writeUsers():
+    phr = []  
+    threadsL.append(1) 
+    while len(phrases)>1:
+        try: 
+            sema.acquire()
+            if len(phrases)>=10:
+                for i in range(0,10):
+                    phr.append(phrases[i]) 
+            else:
+                phr = phrases
+            for i in range(0,len(phr)):
+                phrases.pop(0)   
+            sema.release()   
+            finalArray = markUsers(phr)
+            getUsersStatistics(finalArray) 
+            writeUsersFile(finalArray)     
+            printData()
+        except:
+            print("Exception")     
+    threadsL.pop(0)
+    print("THREAD FINISHED " + str(len(threadsL)))
+    if len(threadsL)<=1:
+        writeUsersStatFile()
+        print("STATISTICS WRITTEN ")
+    
+        
     
 
 threads = []
-i = 0
-phr = []
-cnt = 0
-for ph in phrases:   
-    i=i+1    
-    phr.append(ph)
-    if i>=10 and len(phr)<=10:
-        arr = []
-        arr = list(phr)
-        threads.append(Thread(target=writeUsers, args=(arr, cnt)))
-        cnt = cnt + 1
-        i=0
-        phr.clear()
+for cnt in range(0,10):
+    threads.append(Thread(target=writeUsers))
 
 
 for ph in threads:
     print("thread start")
     ph.start()
+
