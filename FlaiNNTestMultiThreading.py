@@ -263,15 +263,14 @@ def writeResults():
     tr.write("\n")
     tr.write("true positives:\n")
     for us in truePositivesUs:
-        tr.write(us + " ")
+        tr.write(us + "\n")
 
 
 
 #TO PREPARE USERS RECOGNITION FOR MULTITHREADING
 
 def writeUsers():
-    phr = "" 
-    
+    phr = ""    
     threadsL.append(1) 
     while len(trainSet)>0:
         try: 
@@ -301,10 +300,10 @@ def writeUsers():
                                 truePositivesUs.append(strC)
                         if usC != usNN and usC == "O":
                             falsePositives[0] = falsePositives[0] + 1   
-                            falsePositivesUs.append(strNN)               
+                            falsePositivesUs.append(str(tupNN[0]))            
                         if usC != usNN and usNN == "O":
                             falseNegatives[0] = falseNegatives[0] + 1
-                            falseNegativesUs.append(strNN)
+                            falseNegativesUs.append(str(tupNN[0]))
         except:
              print("Exception")
     threadsL.pop(0)
