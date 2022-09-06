@@ -30,8 +30,6 @@ It will execute following steps:
  
 To see all users marked by trained NN do following steps: 
 python demoForNN.py <your text file> <number of ohrases to read>
-
-
 To prepare improve flairNN performance for complex users :
 Do following steps: 
 
@@ -45,3 +43,10 @@ To estimate how many users was added into train set do following steps:
 2. Start python script from console with command python foundUsersStat.py
 All complex users will be written into file onlyDetectedComplexUsersNRStat.txt. 
 All simple users will be written into file onlyDetectedSimpleUsersNRStat
+
+To get false positives, false negatives true positives :
+To use do following steps: 
+
+1. In python file FlaiNNTestMultiThreading.py in line model = SequenceTagger.load set full path to trained model file
+2. Copy file UsersList.txt into same folder with python script#
+3. Start python script from console with command python FlaiNNTestMultiThreading.py <yourTextFile> <number of phrases to take from text file>
