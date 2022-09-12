@@ -253,11 +253,13 @@ def writeResults():
     prec = truePositives[0]/(truePositives[0]+falsePositives[0])
     rec = truePositives[0]/(truePositives[0]+falseNegatives[0])
     fscore = 2*(prec*rec/(prec+rec))
-    tr.write("precision\n")
+    tr.write(" precision - ")
     tr.write(str(prec))
-    tr.write("recall\n")
+    tr.write("\n")
+    tr.write(" recall - ")
     tr.write(str(rec))
-    tr.write("f score\n")
+    tr.write("\n")
+    tr.write(" f score - ")
     tr.write(str(fscore))
     tr.write("\n")
     tr.write("\n")
@@ -291,29 +293,30 @@ def writeUsers():
             sema.release()  
             fin = checkMarkedArrayPresence(phr, users)
             mrUsersNN = getUsersFromNN(phr)
-            mrUsers = fin[0]
-            if len(mrUsers) == len(mrUsersNN):
-                cnt = len(mrUsersNN)
-                for i in range(0, cnt):
-                    tupNN = tuple(mrUsersNN[i])
-                    tup = tuple(mrUsers[i])
-                    strC = re.sub(r'\W+', '', tup[0])
-                    strNN = re.sub(r'\W+', '', tupNN[0])
-                    usC = re.sub(r'\W+', '', tup[2])
-                    usNN = re.sub(r'\W+', '', tupNN[1])
-                    if strC == strNN:
-                        if usC == "B" or usC == "I":
-                            totalNumber[0] = totalNumber[0] + 1
-                            print(strC)
-                            if usC == usNN:
-                                truePositives[0] = truePositives[0] + 1
-                                truePositivesUs.append(strC)
-                        if usC != usNN and usC == "O":
-                            falsePositives[0] = falsePositives[0] + 1   
-                            falsePositivesUs.append(str(tupNN[0]))            
-                        if usC != usNN and usNN == "O":
-                            falseNegatives[0] = falseNegatives[0] + 1
-                            falseNegativesUs.append(str(tupNN[0]))
+            if len(fin)>0:      
+                mrUsers = fin[0]
+                if len(mrUsers)>0 and len(mrUsers) == len(mrUsersNN):
+                   cnt = len(mrUsersNN)
+                   for i in range(0, cnt):
+                       tupNN = tuple(mrUsersNN[i])
+                       tup = tuple(mrUsers[i])
+                       strC = re.sub(r'\W+', '', tup[0])
+                       strNN = re.sub(r'\W+', '', tupNN[0])
+                       usC = re.sub(r'\W+', '', tup[2])
+                       usNN = re.sub(r'\W+', '', tupNN[1])                    
+                       if strC == strNN:
+                           if usC == "B" or usC == "I":
+                               totalNumber[0] = totalNumber[0] + 1
+                               print(strC)
+                               if usC == usNN:
+                                   truePositives[0] = truePositives[0] + 1
+                                   truePositivesUs.append(strC)
+                           if usC != usNN and usC == "O":
+                               falsePositives[0] = falsePositives[0] + 1   
+                               falsePositivesUs.append(str(tupNN[0]))            
+                           if usC != usNN and usNN == "O":
+                               falseNegatives[0] = falseNegatives[0] + 1
+                               falseNegativesUs.append(str(tupNN[0]))
         except:
              print("Exception")
     threadsL.pop(0)
