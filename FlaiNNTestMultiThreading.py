@@ -312,10 +312,10 @@ def writeUsers():
                                    truePositives[0] = truePositives[0] + 1
                                    truePositivesUs.append(strC)
                            if usC != usNN and usC == "O":
-                               falsePositives[0] = falsePositives[0] + 1   
+                               falsePositives[0] = falseNegatives[0] + 1   
                                falsePositivesUs.append(str(tupNN[0]))            
                            if usC != usNN and usNN == "O":
-                               falseNegatives[0] = falseNegatives[0] + 1
+                               falseNegatives[0] = falsePositives[0] + 1
                                falseNegativesUs.append(str(tupNN[0]))
         except:
              print("Exception")
