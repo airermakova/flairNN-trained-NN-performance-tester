@@ -67,6 +67,7 @@ def getPhrasesFromFile(fileName, st, fin):
        return finArr
     except:
       print("Error in reading " + fileName)
+      window['-TEXT-'].update("Error in reading " + fileName)
       exit()
 
 
@@ -86,6 +87,7 @@ def getDataFromFile(fileName):
        return users
     except:
       print("Error in reading " + fileName)
+      window['-TEXT-'].update("Error in reading " + fileName)
       if len(users)>0:
           print(users[len(users)-1])
       exit()
@@ -102,6 +104,7 @@ def getWordsFromGoldenSet(fileName):
        return users
     except:
       print("Error in reading " + fileName)
+      window['-TEXT-'].update("Error in reading " + fileName)
       if len(users)>0:
           print(users[len(users)-1])
       exit()
@@ -142,6 +145,7 @@ def checkMarkedArrayPresence(phrases, users):
             if allowAppend == True:
                 onlyUsers.append(iob_tagged)
                 print(iob_tagged)
+                window['-TEXT1-'].update(iob_tagged)
     return onlyUsers
          
 
@@ -285,6 +289,7 @@ def writeUsers():
              print("Exception")
     threadsL.pop(0)
     print("THREAD FINISHED " + str(len(threadsL)))
+    window['-TEXT1-'].update("THREAD FINISHED " + str(len(threadsL)))
     if len(threadsL)<=1:
         writeUsersFile()
         print("STATISTICS WRITTEN ")
@@ -297,11 +302,10 @@ def readPhrasesAndUsers():
     #phNum = int(sys.argv[2])
     print(phNum)
     trainSet = getPhrasesFromFile(dataFileName, phStart, phNum)
-    print("Taken phrases - ")
-    print(len(trainSet))
+    print('Taken phrases - ' + str(len(trainSet)))
     users = getDataFromFile("usersList.txt")
-    print("Taken users - ")
-    print(len(users))
+    print("Taken users - "+str(len(users)))
+    window['-TEXT-'].update('Taken phrases - ' + str(len(trainSet)) + " Taken users - "+str(len(users)))
     goldsets = getWordsFromGoldenSet("GoldenSet.txt")
     print("Taken goldsets - ")
     print(len(goldsets))
@@ -329,13 +333,13 @@ layout = [
             [sg.Text(' ')], 
             [sg.Text('Entrance parameters')],
             [sg.T("")], [sg.Text("Choose a file: "), sg.Input(), sg.FileBrowse()],
-            [sg.Text('Enter initial phrase you wish to process from')],
-            [sg.Text('If you wish to process phrases from beginning leave field blank')],
+            [sg.Text('Enter initial phrase you wish to process from (to start from beginning leave blank)')],
             [sg.Text('Enter number of first phrase'), sg.InputText()],         
-            [sg.Text('Enter number of phrases you wish to process')],
-            [sg.Text('If you wish to process all phrases leave field blank')],
+            [sg.Text('Enter number of phrases you wish to process (to process all phrases leave blank)')],
             [sg.Text('Enter number of phrases to process'), sg.InputText()],
-            [sg.Button('Ok'), sg.Button('Cancel')] 
+            [sg.Button('Ok'), sg.Button('Cancel')],
+            [sg.Text('', key='-TEXT-')]
+            [sg.Text('Execution log', key='-TEXT1-')]
 ]
 
 # Create the Window
