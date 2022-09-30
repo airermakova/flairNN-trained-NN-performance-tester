@@ -6,10 +6,14 @@ from flair.trainers import ModelTrainer
 from flair.data import Sentence
 import PySimpleGUI as sg
 import re
+import os
+import subprocess
+import platform
 import sys
 import nltk
 import numpy
 import random
+import shlex
 import codecs
 from threading import *
 from langdetect import detect
@@ -38,18 +42,19 @@ threadsL = []
 sema = Semaphore(1)
 stemmer = SnowballStemmer("english")
 
+allFinished = False
 trName = "trainnrC1.txt"
 vName = "valnrC1.txt"
 teName = "testnrC1.txt"
+userStatisticsName = "onlyDetectedUsersNR1.txt"
 tr = open(trName, "w")
 v = open(vName, "w")
 te = open(teName, "w")
-usersFile = open("onlyDetectedUsersNR1.txt", "w")
+usersFile = open(userStatisticsName, "w")
 tr.close()
 v.close()
 te.close()
 usersFile.close()
-usersFile = open("onlyDetectedUsersNR1.txt", "a")
 
 
 #TO GET PHRASES
@@ -126,9 +131,11 @@ def checkMarkedArrayPresence(phrases, users):
         allowAppend = False         
         for iob in iob_tagged:
              if iob[2]=="B" :
-                 regStr = iob[0]                 
+                 regStr = iob[0] 
+                 newLen = newLen + 1                
              if iob[2]=="I":
                  regStr += " " + iob[0]
+                 newLen = newLen + 1
              if iob[2]=="O" and len(regStr)>0:
                  registeredUser.append(regStr)
                  if len(regStr.split(" "))>1:
@@ -138,6 +145,8 @@ def checkMarkedArrayPresence(phrases, users):
                  regStr = ""
                  newLen = newLen + 1
         if newLen>0:
+            if len(regStr)>0 and regStr[len(regStr) - 2:]=="er" or len(regStr)>0 and " " in regStr:
+                 allowAppend = True
             for us in registeredUser:
                 if us not in foundUsers or foundUsers.count(us)<10:
                     foundUsers.append(us)
@@ -254,9 +263,10 @@ def writeResultFile(trainSet):
                 te.write("\n\n\n") 
      
          
-def writeUsersFile():    
+def writeUsersFile():
     if len(globalUsers) != len(globalCount):
         return
+    usersFile = open(userStatisticsName, "a")
     usersFile.write("\n\n\n\n")
     for i in range(0, len(globalCount)):
         for gl in range(0, len(globalUsers[i])):
@@ -282,8 +292,7 @@ def writeUsers():
                 trainSet.pop(0)   
             sema.release()  
             fin = checkMarkedArrayPresence(phr, users)
-            cnt = len(fin)
-            if cnt>0:
+            if len(fin)>0:
                 writeResultFile(fin)
         except:
              print("Exception")
@@ -293,10 +302,17 @@ def writeUsers():
     if len(threadsL)<=1:
         writeUsersFile()
         print("STATISTICS WRITTEN ")
+        window['-TEXT1-'].update("TASK FINISHED. USER STATISTICS WRITTEN")
+        window['-USSTAT-'].update("User file written " + userStatisticsName)
+        window['Open'].update(visible=True)
+        window['-TRAIN-'].update("User file written " + trName)
+        window['-VAL-'].update("User file written " + vName)
+        window['-TEST-'].update("User file written " + teName)
+        allFinished = True
         
 
 #MAIN SCRIPTS
-def readPhrasesAndUsers():
+def readPhrases():
     #dataFileName = str(sys.argv[1])
     print(dataFileName)
     #phNum = int(sys.argv[2])
@@ -309,10 +325,13 @@ def readPhrasesAndUsers():
     goldsets = getWordsFromGoldenSet("GoldenSet.txt")
     print("Taken goldsets - ")
     print(len(goldsets))
-    users = []
-    users = getDataFromFile("usersList.txt")    
     usersFile = open("onlyDetectedUsersNR1.txt", "a")
+    return trainSet
+
+def readUsers():
+    users = getDataFromFile("usersList.txt")    
     #print(users)
+    return users
 
 def startThreads():
     rep = 0
@@ -325,21 +344,38 @@ def startThreads():
         print("thread start")
         ph.start()
 
+#OPEN COMMAND
+
+def IButton(*args, **kwargs):
+    return sg.Col([[sg.Button(*args, **kwargs)]], pad=(0,0))
+
 #USER INTERFACE
 
 sg.theme('DarkAmber')   # Add a touch of color
 # All the stuff inside your window.
-layout = [
-            [sg.Text(' ')], 
+parameters_list_column = [
+    [sg.Text(' ')], 
             [sg.Text('Entrance parameters')],
             [sg.T("")], [sg.Text("Choose a file: "), sg.Input(), sg.FileBrowse()],
-            [sg.Text('Enter initial phrase you wish to process from (to start from beginning leave blank)')],
-            [sg.Text('Enter number of first phrase'), sg.InputText()],         
-            [sg.Text('Enter number of phrases you wish to process (to process all phrases leave blank)')],
-            [sg.Text('Enter number of phrases to process'), sg.InputText()],
-            [sg.Button('Ok'), sg.Button('Cancel')],
-            [sg.Text('', key='-TEXT-')]
-            [sg.Text('Execution log', key='-TEXT1-')]
+            [sg.Text('Enter initial phrase you wish to process from (to start from beginning leave blank)'), sg.InputText()],
+            [sg.Text('Enter number of phrases you wish to process (to process all phrases leave blank)'), sg.InputText()],
+            [sg.Text(' ')]
+]
+button_list_column = [
+    [sg.Button('Ok',button_color=('lightgreen')), sg.Button('Exit',button_color=('darkred'))]
+]
+final_list_column = [
+    [sg.Text('', key='-TEXT-')],
+    [sg.Text('Execution log', key='-TEXT1-')],
+    [sg.Text('', key='-USSTAT-'), IButton('Open',visible=False)],
+    [sg.Text('', key='-TRAIN-'), IButton('Open',visible=False)],
+    [sg.Text('', key='-TEST-'), IButton('Open',visible=False)],
+    [sg.Text('', key='-VAL-'), IButton('Open',visible=False)],
+]
+layout = [
+            [sg.Column(parameters_list_column, justification='left')],
+            [sg.Column(button_list_column, justification='right')],
+            [sg.Column(final_list_column, justification='left')]
 ]
 
 # Create the Window
@@ -347,20 +383,25 @@ window = sg.Window('Automatic preparation of neural network training set', layou
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
     event, values = window.read()
-    if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
+    if event == sg.WIN_CLOSED or event == 'Exit': # if user closes window or clicks cancel
         break
-    print('You entered ', values[0] + values[1])
-    dataFileName = str(values[0])
-    try:
-        phStart = int(values[1])
-    except:
-        phStart = 0
-    try:
-        phNum = int(values[2])
-    except:
-        phNum = 0
-    readPhrasesAndUsers()
-    startThreads()
+    if event == 'Open': 
+        osCommandString = "notepad.exe " + userStatisticsName
+        os.system(osCommandString)
+    if event == 'Ok': 
+        print('You entered ', values[0] + values[1])
+        dataFileName = str(values[0])
+        try:
+            phStart = int(values[1])
+        except:
+            phStart = 0
+        try:
+            phNum = int(values[2])
+        except:
+            phNum = 0
+        trainSet = readPhrases()
+        users = readUsers()
+        startThreads()
     
 window.close()
 
