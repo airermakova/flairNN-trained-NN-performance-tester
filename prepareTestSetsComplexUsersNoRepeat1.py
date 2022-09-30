@@ -4,13 +4,14 @@ from flair.embeddings import WordEmbeddings, StackedEmbeddings
 from flair.models import SequenceTagger
 from flair.trainers import ModelTrainer
 from flair.data import Sentence
+import PySimpleGUI as sg
 import re
 import sys
 import nltk
 import numpy
 import random
 import codecs
-from threading import Thread
+from threading import *
 from langdetect import detect
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
@@ -33,24 +34,41 @@ goldsets = []
 globalUsers = []
 globalCount = []
 foundUsers = []
+threadsL = []
+sema = Semaphore(1)
 stemmer = SnowballStemmer("english")
 
-tr = open("trainnrC1.txt", "a")
-v = open("valnrC1.txt", "a")
-te = open("testnrC1.txt", "a")
+trName = "trainnrC1.txt"
+vName = "valnrC1.txt"
+teName = "testnrC1.txt"
+tr = open(trName, "w")
+v = open(vName, "w")
+te = open(teName, "w")
+usersFile = open("onlyDetectedUsersNR1.txt", "w")
+tr.close()
+v.close()
+te.close()
+usersFile.close()
+usersFile = open("onlyDetectedUsersNR1.txt", "a")
 
 
 #TO GET PHRASES
-def getPhrasesFromFile(fileName):
-    phrases= []    
-    tokenized_phrases = [] 
+def getPhrasesFromFile(fileName, st, fin):
+    phrases= []  
+    finArr = []  
+    tokenized_phrases = []
     try:
        with codecs.open(fileName, 'r', "utf-8") as file:
            phrases = file.read().split(".")
-       return phrases
+       if fin == 0 or fin>len(phrases):
+           fin = len(phrases)-1
+       for i in range(st,fin):
+           finArr.append(phrases[i])
+       return finArr
     except:
       print("Error in reading " + fileName)
       exit()
+
 
 #TO MARK USERS AS WE HAVE DONE FOR TRAIN SET
 
@@ -88,22 +106,6 @@ def getWordsFromGoldenSet(fileName):
           print(users[len(users)-1])
       exit()
 
-#TO GET DATA FROM TEST FILE AND USERS FILE
-
-dataFileName = str(sys.argv[1])
-print(dataFileName)
-
-trainSet = getPhrasesFromFile(dataFileName)
-print("Taken phrases - ")
-print(len(trainSet))
-users = getDataFromFile("usersList.txt")
-print("Taken users - ")
-print(len(users))
-goldsets = getWordsFromGoldenSet("GoldenSet.txt")
-print("Taken goldsets - ")
-print(len(goldsets))
-
-
 def checkMarkedArrayPresence(phrases, users):
     onlyUsers = []
     registeredUser = []
@@ -126,13 +128,15 @@ def checkMarkedArrayPresence(phrases, users):
                  regStr += " " + iob[0]
              if iob[2]=="O" and len(regStr)>0:
                  registeredUser.append(regStr)
-                 #if len(regStr.split(" "))>1:
-                 #    allowAppend = True
+                 if len(regStr.split(" "))>1:
+                     allowAppend = True
+                 elif len(regStr)>0 and regStr[len(regStr) - 2:]=="er":
+                     allowAppend = True
                  regStr = ""
                  newLen = newLen + 1
         if newLen>0:
             for us in registeredUser:
-                if us not in foundUsers:
+                if us not in foundUsers or foundUsers.count(us)<10:
                     foundUsers.append(us)
                     allowAppend = True
             if allowAppend == True:
@@ -206,41 +210,44 @@ def markUser(phrase,user):
     return finTuple
  
 def writeResultFile(trainSet):
-    for arr in trainSet:
-        for s in arr:
-            for st in s:
-                try:
-                    tr.write((st + " ").encode("utf-8").decode())
-                except:
-                    print("error")
-            tr.write("\n")            
-        tr.write("\n\n\n") 
-    t = 0
-    for arr in trainSet:
-        t = t+1
-        if t>3:
-            t = 0
+    with open(trName, 'a') as f:
+        for arr in trainSet:
             for s in arr:
                 for st in s:
                     try:
-                        v.write((st + " ").encode("utf-8").decode())
+                        f.write((st + " ").encode("utf-8").decode())
                     except:
                         print("error")
-                v.write("\n")
-            v.write("\n\n\n") 
-    t = 0
-    for arr in trainSet:
-        t = t+1
-        if t>4:
-            t = 0
-            for s in arr:
-                for st in s:
-                    try:
-                        te.write((st + " ").encode("utf-8").decode())
-                    except:
-                        print("error")
-                te.write("\n")
-            te.write("\n\n\n") 
+                f.write("\n")            
+            f.write("\n\n\n") 
+        t = 0
+    with open(vName, 'a') as v:
+        for arr in trainSet:
+            t = t+1
+            if t>3:
+                t = 0
+                for s in arr:
+                    for st in s:
+                        try:
+                            v.write((st + " ").encode("utf-8").decode())
+                        except:
+                            print("error")
+                    v.write("\n")
+                v.write("\n\n\n") 
+        t = 0
+    with open(teName, 'a') as te:
+        for arr in trainSet:
+            t = t+1
+            if t>4:
+                t = 0
+                for s in arr:
+                    for st in s:
+                        try:
+                            te.write((st + " ").encode("utf-8").decode())
+                        except:
+                            print("error")
+                    te.write("\n")
+                te.write("\n\n\n") 
      
          
 def writeUsersFile():    
@@ -256,44 +263,105 @@ def writeUsersFile():
 
 
 #TO PREPARE USERS RECOGNITION FOR MULTITHREADING
-def writeUsers(pharrays, users):
-    fin = checkMarkedArrayPresence(pharrays, users)
-    writeUsersFile()
-    cnt = len(fin)
-    if cnt>0:
-        print("WRITE RESULT FILE " + str(cnt))
-    writeResultFile(fin)
+def writeUsers():
+    phr = []  
+    threadsL.append(1) 
+    while len(trainSet)>0:
+        try: 
+            sema.acquire()
+            if len(trainSet)>=10:
+                for i in range(0,10):
+                    phr.append(trainSet[i]) 
+            else:
+                phr = trainSet
+            for i in range(0,len(phr)):
+                trainSet.pop(0)   
+            sema.release()  
+            fin = checkMarkedArrayPresence(phr, users)
+            cnt = len(fin)
+            if cnt>0:
+                writeResultFile(fin)
+        except:
+             print("Exception")
+    threadsL.pop(0)
+    print("THREAD FINISHED " + str(len(threadsL)))
+    if len(threadsL)<=1:
+        writeUsersFile()
+        print("STATISTICS WRITTEN ")
+        
 
 #MAIN SCRIPTS
+def readPhrasesAndUsers():
+    #dataFileName = str(sys.argv[1])
+    print(dataFileName)
+    #phNum = int(sys.argv[2])
+    print(phNum)
+    trainSet = getPhrasesFromFile(dataFileName, phStart, phNum)
+    print("Taken phrases - ")
+    print(len(trainSet))
+    users = getDataFromFile("usersList.txt")
+    print("Taken users - ")
+    print(len(users))
+    goldsets = getWordsFromGoldenSet("GoldenSet.txt")
+    print("Taken goldsets - ")
+    print(len(goldsets))
+    users = []
+    users = getDataFromFile("usersList.txt")    
+    usersFile = open("onlyDetectedUsersNR1.txt", "a")
+    #print(users)
 
-users = []
-users = getDataFromFile("usersList.txt")
-#print(users)
+def startThreads():
+    rep = 0
+    i=0
+    #writeUsers(trainSet, users)
+    threads = []
+    for cnt in range(0,10):
+        threads.append(Thread(target=writeUsers))
+    for ph in threads:
+        print("thread start")
+        ph.start()
+
+#USER INTERFACE
+
+sg.theme('DarkAmber')   # Add a touch of color
+# All the stuff inside your window.
+layout = [
+            [sg.Text(' ')], 
+            [sg.Text('Entrance parameters')],
+            [sg.T("")], [sg.Text("Choose a file: "), sg.Input(), sg.FileBrowse()],
+            [sg.Text('Enter initial phrase you wish to process from')],
+            [sg.Text('If you wish to process phrases from beginning leave field blank')],
+            [sg.Text('Enter number of first phrase'), sg.InputText()],         
+            [sg.Text('Enter number of phrases you wish to process')],
+            [sg.Text('If you wish to process all phrases leave field blank')],
+            [sg.Text('Enter number of phrases to process'), sg.InputText()],
+            [sg.Button('Ok'), sg.Button('Cancel')] 
+]
+
+# Create the Window
+window = sg.Window('Automatic preparation of neural network training set', layout)
+# Event Loop to process "events" and get the "values" of the inputs
+while True:
+    event, values = window.read()
+    if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
+        break
+    print('You entered ', values[0] + values[1])
+    dataFileName = str(values[0])
+    try:
+        phStart = int(values[1])
+    except:
+        phStart = 0
+    try:
+        phNum = int(values[2])
+    except:
+        phNum = 0
+    readPhrasesAndUsers()
+    startThreads()
+    
+window.close()
 
 
-#f = open("onlyUsers.txt", "w")
-#f.close()
 
-
-rep = 0
-i=0
-
-usersFile = open("onlyDetectedUsersNR1.txt", "a")
-#writeUsers(trainSet, users)
-threads = []
-phrases = []
-for ph in trainSet:    
-    i=i+1
-    phrases.append(ph)
-    if i>=200 and len(phrases)<=200:
-        threads.append(Thread(target=writeUsers, args=(list(phrases), users)))
-        i=0
-        phrases.clear()
-
-
-for ph in threads:
-    print("thread start")
-    ph.start()
 
 
 
