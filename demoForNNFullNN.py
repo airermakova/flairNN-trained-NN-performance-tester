@@ -51,7 +51,7 @@ markedPhrasesFile.close()
 
 markedPhrasesFileName = "markedPhrasesFullNN.txt"
 
-model = SequenceTagger.load("C:/Users/airer/Documents/Pisa/Classifier/trainerNRFinal/final-model.pt")
+model = SequenceTagger.load("C:/Users/airer/Documents/Pisa/Classifier/trainerNRFinal10Rep/final-model.pt")
 
 #TO GET PHRASES
 def getPhrasesFromFile(fileName, st, fin):
