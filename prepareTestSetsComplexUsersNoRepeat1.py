@@ -304,7 +304,7 @@ def writeUsers():
         print("STATISTICS WRITTEN ")
         window['-TEXT1-'].update("TASK FINISHED. USER STATISTICS WRITTEN")
         window['-USSTAT-'].update("User file written " + userStatisticsName)
-        window['Open'].update(visible=True)
+        window['Open folder'].update(visible=True)
         window['-TRAIN-'].update("User file written " + trName)
         window['-VAL-'].update("User file written " + vName)
         window['-TEST-'].update("User file written " + teName)
@@ -321,7 +321,7 @@ def readPhrases():
     print('Taken phrases - ' + str(len(trainSet)))
     users = getDataFromFile("usersList.txt")
     print("Taken users - "+str(len(users)))
-    window['-TEXT-'].update('Taken phrases - ' + str(len(trainSet)) + " Taken users - "+str(len(users)))
+    window['-TEXT-'].update('Taken phrases - ' + str(len(trainSet)) + " Users taken from users list- "+str(len(users)))
     goldsets = getWordsFromGoldenSet("GoldenSet.txt")
     print("Taken goldsets - ")
     print(len(goldsets))
@@ -334,6 +334,7 @@ def readUsers():
     return users
 
 def startThreads():
+    window['Open folder'].update(visible=False)
     rep = 0
     i=0
     #writeUsers(trainSet, users)
@@ -362,32 +363,32 @@ parameters_list_column = [
             [sg.Text(' ')]
 ]
 button_list_column = [
-    [sg.Button('Ok',button_color=('lightgreen')), sg.Button('Exit',button_color=('darkred'))]
+    [sg.Button('Ok', button_color=(sg.YELLOWS[0], sg.GREENS[0])), sg.Button('Exit',button_color=(sg.YELLOWS[0], sg.BLUES[0]))]
 ]
 final_list_column = [
-    [sg.Text('', key='-TEXT-')],
-    [sg.Text('Execution log', key='-TEXT1-')],
-    [sg.Text('', key='-USSTAT-'), IButton('Open',visible=False)],
-    [sg.Text('', key='-TRAIN-'), IButton('Open',visible=False)],
-    [sg.Text('', key='-TEST-'), IButton('Open',visible=False)],
-    [sg.Text('', key='-VAL-'), IButton('Open',visible=False)],
+    [sg.Text('', key='-TEXT-',background_color='#DAE0E6', text_color='black')],
+    [sg.MLine('Execution log', key='-TEXT1-', background_color='#DAE0E6', size=(90, 3), text_color='black')],
+    [sg.Text('', key='-USSTAT-', background_color='#DAE0E6', text_color='black')],
+    [sg.Text('', key='-TRAIN-', background_color='#DAE0E6', text_color='black')],
+    [sg.Text('', key='-TEST-', background_color='#DAE0E6', text_color='black')],
+    [sg.Text('', key='-VAL-', background_color='#DAE0E6'), IButton('Open folder',visible=False)],
 ]
 layout = [
             [sg.Column(parameters_list_column, justification='left')],
             [sg.Column(button_list_column, justification='right')],
-            [sg.Column(final_list_column, justification='left')]
+            [sg.Column(final_list_column, justification='left', background_color='#DAE0E6', size=(700, 450))]
 ]
 
 # Create the Window
-window = sg.Window('Automatic preparation of neural network training set', layout)
+window = sg.Window('Automatic preparation of neural network training set', layout, resizable=False, size=(700, 450))
+
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
     event, values = window.read()
     if event == sg.WIN_CLOSED or event == 'Exit': # if user closes window or clicks cancel
         break
-    if event == 'Open': 
-        osCommandString = "notepad.exe " + userStatisticsName
-        os.system(osCommandString)
+    if event == 'Open folder': 
+        subprocess.Popen(f'explorer {os.path.abspath(os.getcwd())}')
     if event == 'Ok': 
         print('You entered ', values[0] + values[1])
         dataFileName = str(values[0])
