@@ -366,12 +366,12 @@ button_list_column = [
     [sg.Button('Ok', button_color=(sg.YELLOWS[0], sg.GREENS[0])), sg.Button('Exit',button_color=(sg.YELLOWS[0], sg.BLUES[0]))]
 ]
 final_list_column = [
-    [sg.Text('', key='-TEXT-',background_color='#DAE0E6', text_color='black')],
+    [sg.Text('Input data:', key='-TEXT-',background_color='#DAE0E6', text_color='black')],
     [sg.MLine('Execution log', key='-TEXT1-', background_color='#DAE0E6', size=(90, 3), text_color='black')],
-    [sg.Text('', key='-USSTAT-', background_color='#DAE0E6', text_color='black')],
+    [sg.Text('Results:', key='-USSTAT-', background_color='#DAE0E6', text_color='black')],
     [sg.Text('', key='-TRAIN-', background_color='#DAE0E6', text_color='black')],
     [sg.Text('', key='-TEST-', background_color='#DAE0E6', text_color='black')],
-    [sg.Text('', key='-VAL-', background_color='#DAE0E6'), IButton('Open folder',visible=False)],
+    [sg.Text('', key='-VAL-', background_color='#DAE0E6', text_color='black'), IButton('Open folder',visible=False)],
 ]
 layout = [
             [sg.Column(parameters_list_column, justification='left')],
