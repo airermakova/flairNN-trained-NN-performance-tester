@@ -291,6 +291,7 @@ def writeUsers():
             for i in range(0,len(phr)):
                 trainSet.pop(0)   
             sema.release()  
+            window['-USSTAT-'].update("Remaining phrases " + str(len(trainSet)))
             fin = checkMarkedArrayPresence(phr, users)
             if len(fin)>0:
                 writeResultFile(fin)
