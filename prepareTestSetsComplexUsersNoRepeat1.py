@@ -304,11 +304,11 @@ def writeUsers():
         writeUsersFile()
         print("STATISTICS WRITTEN ")
         window['-TEXT1-'].update("TASK FINISHED. USER STATISTICS WRITTEN")
-        window['-USSTAT-'].update("User file written " + userStatisticsName)
+        window['-USSTAT-'].update("Users statistics written " + userStatisticsName)
         window['Open folder'].update(visible=True)
-        window['-TRAIN-'].update("User file written " + trName)
-        window['-VAL-'].update("User file written " + vName)
-        window['-TEST-'].update("User file written " + teName)
+        window['-TRAIN-'].update("Training set written in " + trName)
+        window['-VAL-'].update("Validation set written " + vName)
+        window['-TEST-'].update("Test set written " + teName)
         allFinished = True
         
 
