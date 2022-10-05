@@ -266,6 +266,7 @@ def writeUsers():
             for i in range(0,len(phr)):
                 phrases.pop(0)  
             sema.release()   
+            window['-USSTAT-'].update("Remaining phrases " + str(len(phrases)))
             finalArray = markUsers(phr)
             getUsersStatistics(finalArray) 
             writeUsersFile(finalArray)     
@@ -279,7 +280,7 @@ def writeUsers():
         writeUsersStatFile()
         window['-USSTAT-'].update("")
         print("STATISTICS WRITTEN ")
-        window['-TEXT1-'].update("STATISTICS WRITTEN in following files: markedSimpleUsersOnlyFullNN1.txt, markedComplexUsersOnlyFullNN1.txt, markedUsersStatisticsFullNN1.txt, markedUsersOutOfList1.txt")
+        window['-TEXT1-'].update("STATISTICS WRITTEN in following files: all simple users in markedSimpleUsersOnlyFullNN1.txt, users which identity marked with different words in markedComplexUsersOnlyFullNN1.txt, all users in markedUsersStatisticsFullNN1.txt")
         window['Open Folder'].update(visible=True)
     
         
@@ -330,7 +331,7 @@ layout = [
 ]
 
 # Create the Window
-window = sg.Window('Automatic preparation of neural network training set', layout, resizable=False, size=(700, 450))
+window = sg.Window('Demo for neural network', layout, resizable=False, size=(700, 450))
 
 # Event Loop to process "events" and get the "values" of the inputs
 while True:
